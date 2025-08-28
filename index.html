@@ -6,7 +6,759 @@
     <title>Meal Rating System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Rating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Custom gradient text for headings */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        /* Star Rating Styles */
+        .star-rating {
+            direction: rtl;
+            display: inline-block;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+            font-size: 2rem;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input[type="radio"]:checked ~ label {
+            color: #f8ce0b; /* Gold color for selected stars */
+        }
+
+        /* Page display control */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+
+        /* Progress bar for daily reports */
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        .rating-chart {
+            background: linear-gradient(90deg, #4caf50 var(--rating-percent), #e0e0e0 var(--rating-percent));
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-200 to-purple-300 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold">🍽️ Meal Rating</span>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="outline-none mobile-menu-button">
+                        <i class="fas fa-bars text-white text-2xl"></i>
+                    </button>
+                </div>
+                <!-- Primary Navbar links -->
+                <div class="hidden md:flex space-x-4">
+                    <button onclick="showPage('rating')" class="px-3 py-2 rounded-md hover:bg-blue-700 transition">Rate Meal</button>
+                    <button onclick="showPage('reports')" class="px-3 py-2 rounded-md hover:bg-blue-700 transition">Reports</button>
+                    <button onclick="showPage('records')" class="px-3 py-2 rounded-md hover:bg-blue-700 transition">All Records</button>
+                    <button onclick="showPage('photos')" class="px-3 py-2 rounded-md hover:bg-blue-700 transition">Submit Photos</button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden flex-col space-y-2 p-4 bg-blue-700">
+            <button onclick="showPage('rating'); toggleMobileMenu();" class="block px-3 py-2 rounded-md text-white hover:bg-blue-600 transition">Rate Meal</button>
+            <button onclick="showPage('reports'); toggleMobileMenu();" class="block px-3 py-2 rounded-md text-white hover:bg-blue-600 transition">Reports</button>
+            <button onclick="showPage('records'); toggleMobileMenu();" class="block px-3 py-2 rounded-md text-white hover:bg-blue-600 transition">All Records</button>
+            <button onclick="showPage('photos'); toggleMobileMenu();" class="block px-3 py-2 rounded-md text-white hover:bg-blue-600 transition">Submit Photos</button>
+        </div>
+    </nav>
+
+    <!-- Page 1: Rating Page -->
+    <div id="rating" class="page active">
+        <div class="max-w-4xl mx-auto py-8 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h1 class="text-3xl font-bold text-center text-gradient bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 mb-8">Rate Your Meals</h1>
+                
+                <form id="ratingForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
+                            <select id="mealType" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Select Meal Type</option>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="dinner">Dinner</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                            <input type="date" id="mealDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                            <input type="time" id="mealTime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <!-- Dish Entries -->
+                    <div id="dishEntries" class="space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Dishes</h2>
+                        <div class="dish-entry p-4 border border-gray-200 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <input type="text" class="flex-1 p-3 border border-gray-300 rounded-lg" placeholder="Dish Name" required>
+                                <div class="star-rating ml-2">
+                                    <input type="radio" id="dish1-star10" name="dish1-rating" value="10"><label for="dish1-star10">★</label>
+                                    <input type="radio" id="dish1-star9" name="dish1-rating" value="9"><label for="dish1-star9">★</label>
+                                    <input type="radio" id="dish1-star8" name="dish1-rating" value="8"><label for="dish1-star8">★</label>
+                                    <input type="radio" id="dish1-star7" name="dish1-rating" value="7"><label for="dish1-star7">★</label>
+                                    <input type="radio" id="dish1-star6" name="dish1-rating" value="6"><label for="dish1-star6">★</label>
+                                    <input type="radio" id="dish1-star5" name="dish1-rating" value="5"><label for="dish1-star5">★</label>
+                                    <input type="radio" id="dish1-star4" name="dish1-rating" value="4"><label for="dish1-star4">★</label>
+                                    <input type="radio" id="dish1-star3" name="dish1-rating" value="3"><label for="dish1-star3">★</label>
+                                    <input type="radio" id="dish1-star2" name="dish1-rating" value="2"><label for="dish1-star2">★</label>
+                                    <input type="radio" id="dish1-star1" name="dish1-rating" value="1"><label for="dish1-star1">★</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Comments (Optional)</label>
+                                <textarea class="w-full p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Add comments for this dish..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="addDish" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Another Dish</button>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-3 px-8 rounded-lg transition duration-300 transform hover:scale-105">
+                            Submit Rating
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Reports Page -->
+    <div id="reports" class="page">
+        <div class="max-w-6xl mx-auto py-8 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h1 class="text-3xl font-bold text-center text-gradient bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500 mb-8">Meal Reports & Analytics</h1>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <select id="reportDateRange" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="thisWeek">This Week</option>
+                            <option value="thisMonth">This Month</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
+                        <select id="reportMealType" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="all">All Types</option>
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="snacks">Snacks</option>
+                            <option value="dinner">Dinner</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-r from-green-200 to-green-400 p-6 rounded-lg text-center">
+                        <div class="text-3xl font-bold text-white" id="avgRating">0.0</div>
+                        <div class="text-sm text-white">Average Rating</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-yellow-200 to-yellow-400 p-6 rounded-lg text-center">
+                        <div class="text-3xl font-bold text-white" id="weeklyAvg">0.0</div>
+                        <div class="text-sm text-white">Weekly Average</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-200 to-purple-400 p-6 rounded-lg text-center">
+                        <div class="text-3xl font-bold text-white" id="monthlyAvg">0.0</div>
+                        <div class="text-sm text-white">Monthly Average</div>
+                    </div>
+                </div>
+
+                <!-- Top and Lowest Rated Dishes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-green-800 mb-4">Top Rated Dish (Filtered)</h3>
+                        <div id="topDishes" class="space-y-3">
+                            <!-- Top dish will be populated here -->
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-red-800 mb-4">Lowest Rated Dish (Filtered)</h3>
+                        <div id="lowDishes" class="space-y-3">
+                            <!-- Low dish will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: All Records Page -->
+    <div id="records" class="page">
+        <div class="max-w-6xl mx-auto py-8 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">All Meal Records</h1>
+                
+                <!-- Records Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
+                        <select id="recordsMealType" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="all">All Types</option>
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="snacks">Snacks</option>
+                            <option value="dinner">Dinner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                        <input type="date" id="recordsDateFrom" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                        <input type="date" id="recordsDateTo" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+
+                <!-- Records Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meal Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dish</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTable" class="divide-y divide-gray-200">
+                            <!-- Records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Photo Submission Page -->
+    <div id="photos" class="page">
+        <div class="max-w-4xl mx-auto py-8 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Submit Photos</h1>
+                
+                <form id="photoForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                        <input type="date" id="photoDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photo</label>
+                        <input type="file" id="photoUpload" accept="image/*" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="bg-gradient-to-r from-pink-400 to-purple-500 text-white font-bold py-3 px-8 rounded-lg transition duration-300 transform hover:scale-105">
+                            Submit Photo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thank You Modal -->
+    <div id="thankYouModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Thank You!</h2>
+            <p class="text-gray-600 mb-6">Your submission has been received successfully.</p>
+            <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs - IMPORTANT: Replace with your actual versions if different -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+    <script>
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAzS_hrUpsljjgsax3TUCEXE-P5HUotDBc",
+  authDomain: "food-analysis-78fe5.firebaseapp.com",
+  projectId: "food-analysis-78fe5",
+  storageBucket: "food-analysis-78fe5.firebasestorage.app",
+  messagingSenderId: "652332958495",
+  appId: "1:652332958495:web:eda7983447dc0cded1e62a",
+  measurementId: "G-2476F136KM"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
+
+        let dishCounter = 1; // To ensure unique names for dish ratings
+
+        // Function to toggle mobile menu visibility
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Event listener for mobile menu button
+        document.getElementById('mobile-menu-button').addEventListener('click', toggleMobileMenu);
+
+        // Initialize current date on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('mealDate').value = today;
+            document.getElementById('photoDate').value = today;
+            // Initial load of reports and records will now fetch from Firebase
+            updateReports(); 
+            loadRecords(); 
+        });
+
+        // Function to show/hide pages
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+
+            // Update reports or records when their pages are shown
+            if (pageId === 'reports') {
+                updateReports();
+            } else if (pageId === 'records') {
+                loadRecords();
+            }
+        }
+
+        // Function to add another dish input field with star rating and comments
+        document.getElementById('addDish').addEventListener('click', function() {
+            dishCounter++;
+            const dishEntries = document.getElementById('dishEntries');
+            const newDishEntry = document.createElement('div');
+            newDishEntry.className = 'dish-entry p-4 border border-gray-200 rounded-lg';
+            newDishEntry.innerHTML = `
+                <div class="flex items-center mb-2">
+                    <input type="text" class="flex-1 p-3 border border-gray-300 rounded-lg" placeholder="Dish Name" required>
+                    <div class="star-rating ml-2">
+                        <input type="radio" id="dish${dishCounter}-star10" name="dish${dishCounter}-rating" value="10"><label for="dish${dishCounter}-star10">★</label>
+                        <input type="radio" id="dish${dishCounter}-star9" name="dish${dishCounter}-rating" value="9"><label for="dish${dishCounter}-star9">★</label>
+                        <input type="radio" id="dish${dishCounter}-star8" name="dish${dishCounter}-rating" value="8"><label for="dish${dishCounter}-star8">★</label>
+                        <input type="radio" id="dish${dishCounter}-star7" name="dish${dishCounter}-rating" value="7"><label for="dish${dishCounter}-star7">★</label>
+                        <input type="radio" id="dish${dishCounter}-star6" name="dish${dishCounter}-rating" value="6"><label for="dish${dishCounter}-star6">★</label>
+                        <input type="radio" id="dish${dishCounter}-star5" name="dish${dishCounter}-rating" value="5"><label for="dish${dishCounter}-star5">★</label>
+                        <input type="radio" id="dish${dishCounter}-star4" name="dish${dishCounter}-rating" value="4"><label for="dish${dishCounter}-star4">★</label>
+                        <input type="radio" id="dish${dishCounter}-star3" name="dish${dishCounter}-rating" value="3"><label for="dish${dishCounter}-star3">★</label>
+                        <input type="radio" id="dish${dishCounter}-star2" name="dish${dishCounter}-rating" value="2"><label for="dish${dishCounter}-star2">★</label>
+                        <input type="radio" id="dish${dishCounter}-star1" name="dish${dishCounter}-rating" value="1"><label for="dish${dishCounter}-star1">★</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Comments (Optional)</label>
+                    <textarea class="w-full p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Add comments for this dish..."></textarea>
+                </div>
+            `;
+            dishEntries.appendChild(newDishEntry);
+        });
+
+        // Form submission for ratings
+        document.getElementById('ratingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const mealType = document.getElementById('mealType').value;
+            const mealDate = document.getElementById('mealDate').value;
+            const mealTime = document.getElementById('mealTime').value;
+
+            const dishEntries = document.querySelectorAll('#dishEntries .dish-entry');
+            let allRatingsToSave = []; // Renamed to avoid conflict with global allRatings
+
+            dishEntries.forEach((dishEntry, index) => {
+                const dishNameInput = dishEntry.querySelector('input[type="text"]');
+                const selectedRating = dishEntry.querySelector(`input[name="dish${index + 1}-rating"]:checked`);
+                const commentsInput = dishEntry.querySelector('textarea');
+
+                if (dishNameInput && dishNameInput.value.trim() !== "" && selectedRating) {
+                    allRatingsToSave.push({
+                        mealType: mealType,
+                        date: mealDate,
+                        time: mealTime,
+                        dish: dishNameInput.value.trim(),
+                        rating: parseInt(selectedRating.value),
+                        comments: commentsInput ? commentsInput.value.trim() : ''
+                    });
+                }
+            });
+
+            if (allRatingsToSave.length === 0) {
+                alert('Please enter at least one dish and its rating.');
+                return;
+            }
+
+            // Save ratings to Firebase Realtime Database
+            const ratingsRef = database.ref('mealRatings');
+            const promises = allRatingsToSave.map(rating => ratingsRef.push(rating));
+
+            Promise.all(promises)
+                .then(() => {
+                    showThankYouModal();
+                    // Reset form
+                    e.target.reset(); // Use e.target to reset the form that was submitted
+                    // Reset dish entries to only one
+                    document.getElementById('dishEntries').innerHTML = `
+                        <h2 class="text-lg font-semibold text-gray-800">Dishes</h2>
+                        <div class="dish-entry p-4 border border-gray-200 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <input type="text" class="flex-1 p-3 border border-gray-300 rounded-lg" placeholder="Dish Name" required>
+                                <div class="star-rating ml-2">
+                                    <input type="radio" id="dish1-star10" name="dish1-rating" value="10"><label for="dish1-star10">★</label>
+                                    <input type="radio" id="dish1-star9" name="dish1-rating" value="9"><label for="dish1-star9">★</label>
+                                    <input type="radio" id="dish1-star8" name="dish1-rating" value="8"><label for="dish1-star8">★</label>
+                                    <input type="radio" id="dish1-star7" name="dish1-rating" value="7"><label for="dish1-star7">★</label>
+                                    <input type="radio" id="dish1-star6" name="dish1-rating" value="6"><label for="dish1-star6">★</label>
+                                    <input type="radio" id="dish1-star5" name="dish1-rating" value="5"><label for="dish1-star5">★</label>
+                                    <input type="radio" id="dish1-star4" name="dish1-rating" value="4"><label for="dish1-star4">★</label>
+                                    <input type="radio" id="dish1-star3" name="dish1-rating" value="3"><label for="dish1-star3">★</label>
+                                    <input type="radio" id="dish1-star2" name="dish1-rating" value="2"><label for="dish1-star2">★</label>
+                                    <input type="radio" id="dish1-star1" name="dish1-rating" value="1"><label for="dish1-star1">★</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Comments (Optional)</label>
+                                <textarea class="w-full p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Add comments for this dish..."></textarea>
+                            </div>
+                        </div>
+                    `;
+                    dishCounter = 1; // Reset counter
+                    document.getElementById('mealDate').value = new Date().toISOString().split('T')[0]; // Reset date
+                })
+                .catch(error => {
+                    console.error("Error saving ratings to Firebase:", error);
+                    alert("Failed to submit ratings. Please try again.");
+                });
+        });
+
+        // Show thank you modal
+        function showThankYouModal() {
+            document.getElementById('thankYouModal').classList.remove('hidden');
+        }
+
+        // Close thank you modal
+        function closeModal() {
+            document.getElementById('thankYouModal').classList.add('hidden');
+        }
+
+        // --- Reports Page Logic ---
+        document.getElementById('reportDateRange').addEventListener('change', updateReports);
+        document.getElementById('reportMealType').addEventListener('change', updateReports);
+
+        function updateReports() {
+            database.ref('mealRatings').on('value', (snapshot) => {
+                const allRatings = [];
+                snapshot.forEach((childSnapshot) => {
+                    allRatings.push(childSnapshot.val());
+                });
+
+                let filteredRatings = [...allRatings]; // Create a copy to filter
+
+                const dateRange = document.getElementById('reportDateRange').value;
+                const mealType = document.getElementById('reportMealType').value;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+                // Filter by date range
+                if (dateRange === 'today') {
+                    filteredRatings = filteredRatings.filter(r => new Date(r.date).toDateString() === today.toDateString());
+                } else if (dateRange === 'yesterday') {
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+                    filteredRatings = filteredRatings.filter(r => new Date(r.date).toDateString() === yesterday.toDateString());
+                } else if (dateRange === 'thisWeek') {
+                    const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay())); // Sunday
+                    filteredRatings = filteredRatings.filter(r => new Date(r.date) >= firstDayOfWeek);
+                } else if (dateRange === 'thisMonth') {
+                    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    filteredRatings = filteredRatings.filter(r => new Date(r.date) >= firstDayOfMonth);
+                }
+                // 'all' range means no date filtering
+
+                // Filter by meal type
+                if (mealType !== 'all') {
+                    filteredRatings = filteredRatings.filter(r => r.mealType === mealType);
+                }
+
+                // Update Summary Cards (removed total ratings)
+                if (filteredRatings.length > 0) {
+                    const totalRatingSum = filteredRatings.reduce((sum, r) => sum + r.rating, 0);
+                    document.getElementById('avgRating').textContent = (totalRatingSum / filteredRatings.length).toFixed(1);
+
+                    // Calculate Weekly Average (last 7 days from today)
+                    const sevenDaysAgo = new Date();
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    const weeklyRatings = allRatings.filter(r => new Date(r.date) >= sevenDaysAgo);
+                    const weeklyAvg = weeklyRatings.length > 0 ? (weeklyRatings.reduce((sum, r) => sum + r.rating, 0) / weeklyRatings.length).toFixed(1) : '0.0';
+                    document.getElementById('weeklyAvg').textContent = weeklyAvg;
+
+                    // Calculate Monthly Average (last 30 days from today)
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    const monthlyRatings = allRatings.filter(r => new Date(r.date) >= thirtyDaysAgo);
+                    const monthlyAvg = monthlyRatings.length > 0 ? (monthlyRatings.reduce((sum, r) => sum + r.rating, 0) / monthlyRatings.length).toFixed(1) : '0.0';
+                    document.getElementById('monthlyAvg').textContent = monthlyAvg;
+
+                    // Update Top and Lowest Rated Dishes
+                    updateDishRankings(filteredRatings, mealType); // Pass mealType for filtering top dish
+                } else {
+                    document.getElementById('avgRating').textContent = '0.0';
+                    document.getElementById('weeklyAvg').textContent = '0.0';
+                    document.getElementById('monthlyAvg').textContent = '0.0';
+                    document.getElementById('topDishes').innerHTML = '<p class="text-gray-500">No data for top dish.</p>';
+                    document.getElementById('lowDishes').innerHTML = '<p class="text-gray-500">No data for low dishes.</p>';
+                }
+            });
+        }
+
+        function updateDishRankings(ratings, mealTypeFilter) {
+            const dishScores = {}; // { dishName: { totalRating: X, count: Y } }
+
+            ratings.forEach(r => {
+                // Apply meal type filter for dish rankings if not 'all'
+                if (mealTypeFilter === 'all' || r.mealType === mealTypeFilter) {
+                    if (!dishScores[r.dish]) {
+                        dishScores[r.dish] = { totalRating: 0, count: 0 };
+                    }
+                    dishScores[r.dish].totalRating += r.rating;
+                    dishScores[r.dish].count++;
+                }
+            });
+
+            const dishAverages = Object.keys(dishScores).map(dish => ({
+                name: dish,
+                average: dishScores[dish].totalRating / dishScores[dish].count
+            }));
+
+            // Sort for top dish (descending average) - only one
+            const topDish = [...dishAverages].sort((a, b) => b.average - a.average)[0];
+            const topDishesHtml = topDish ? `
+                <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <span class="font-medium text-green-800">${topDish.name}</span>
+                    <span class="font-bold text-green-700">${topDish.average.toFixed(1)}/10</span>
+                </div>
+            ` : '<p class="text-gray-500">No top dish to display for this filter.</p>';
+            document.getElementById('topDishes').innerHTML = topDishesHtml;
+
+            // Sort for lowest dish (ascending average) - only one
+            const lowDish = [...dishAverages].sort((a, b) => a.average - b.average)[0];
+            const lowDishesHtml = lowDish ? `
+                <div class="flex justify-between items-center p-2 bg-red-50 rounded">
+                    <span class="font-medium text-red-800">${lowDish.name}</span>
+                    <span class="font-bold text-red-700">${lowDish.average.toFixed(1)}/10</span>
+                </div>
+            ` : '<p class="text-gray-500">No low dish to display for this filter.</p>';
+            document.getElementById('lowDishes').innerHTML = lowDishesHtml;
+        }
+
+        // --- All Records Page Logic ---
+        document.getElementById('recordsMealType').addEventListener('change', loadRecords);
+        document.getElementById('recordsDateFrom').addEventListener('change', loadRecords);
+        document.getElementById('recordsDateTo').addEventListener('change', loadRecords);
+
+        function loadRecords() {
+            // Fetch both ratings and photos from Firebase
+            Promise.all([
+                new Promise(resolve => {
+                    database.ref('mealRatings').on('value', (snapshot) => {
+                        const ratings = [];
+                        snapshot.forEach(childSnapshot => ratings.push(childSnapshot.val()));
+                        resolve(ratings);
+                    });
+                }),
+                new Promise(resolve => {
+                    database.ref('mealPhotos').on('value', (snapshot) => {
+                        const photos = [];
+                        snapshot.forEach(childSnapshot => photos.push(childSnapshot.val()));
+                        resolve(photos);
+                    });
+                })
+            ]).then(([allRatings, allPhotos]) => {
+                let filteredRatings = [...allRatings];
+
+                const mealTypeFilter = document.getElementById('recordsMealType').value;
+                const dateFromFilter = document.getElementById('recordsDateFrom').value;
+                const dateToFilter = document.getElementById('recordsDateTo').value;
+
+                // Apply meal type filter to ratings
+                if (mealTypeFilter !== 'all') {
+                    filteredRatings = filteredRatings.filter(record => record.mealType === mealTypeFilter);
+                }
+
+                // Apply date range filter to ratings
+                if (dateFromFilter) {
+                    filteredRatings = filteredRatings.filter(record => record.date >= dateFromFilter);
+                }
+                if (dateToFilter) {
+                    filteredRatings = filteredRatings.filter(record => record.date <= dateToFilter);
+                }
+
+                const recordsTableBody = document.getElementById('recordsTable');
+                recordsTableBody.innerHTML = ''; // Clear previous records
+
+                if (filteredRatings.length === 0 && allPhotos.length === 0) {
+                    recordsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No records found for the selected filters.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Combine ratings and photos, then sort by date
+                let combinedRecords = [];
+
+                // Add ratings to combined records
+                filteredRatings.forEach(record => {
+                    combinedRecords.push({ type: 'rating', data: record });
+                });
+
+                // Add photos to combined records, applying date filters
+                allPhotos.forEach(photo => {
+                    if ((!dateFromFilter || photo.date >= dateFromFilter) && (!dateToFilter || photo.date <= dateToFilter)) {
+                        combinedRecords.push({ type: 'photo', data: photo });
+                    }
+                });
+
+                // Sort combined records by date (newest first)
+                combinedRecords.sort((a, b) => {
+                    const dateA = a.type === 'rating' ? new Date(a.data.date + ' ' + a.data.time) : new Date(a.data.date);
+                    const dateB = b.type === 'rating' ? new Date(b.data.date + ' ' + b.data.time) : new Date(b.data.date);
+                    return dateB - dateA;
+                });
+
+                combinedRecords.forEach(item => {
+                    const row = document.createElement('tr');
+                    if (item.type === 'rating') {
+                        const record = item.data;
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.date} ${record.time}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">${record.mealType}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.dish}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${record.rating >= 7 ? 'text-green-600' : record.rating >= 4 ? 'text-yellow-600' : 'text-red-600'}">${record.rating}/10</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${record.comments || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                        `;
+                    } else if (item.type === 'photo') {
+                        const photo = item.data;
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${photo.date}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">Photo</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold">-</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">-</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="${photo.src}" target="_blank">
+                                    <img src="${photo.src}" alt="Meal Photo" class="h-12 w-12 object-cover rounded-md cursor-pointer">
+                                </a>
+                            </td>
+                        `;
+                    }
+                    recordsTableBody.appendChild(row);
+                });
+            }).catch(error => {
+                console.error("Error loading records from Firebase:", error);
+                recordsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-red-500">Error loading records. Please check console.</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Photo Submission Logic ---
+        document.getElementById('photoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const photoDate = document.getElementById('photoDate').value;
+            const photoFile = document.getElementById('photoUpload').files[0];
+
+            if (photoFile) {
+                const storageRef = storage.ref('meal_photos/' + photoFile.name);
+                const uploadTask = storageRef.put(photoFile);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // You can add a progress bar here if needed
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                    },
+                    (error) => {
+                        console.error("Photo upload failed:", error);
+                        alert("Photo upload failed! " + error.message);
+                    },
+                    () => {
+                        // Upload completed successfully, now get the download URL
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            // Save photo metadata (date and URL) to Realtime Database
+                            database.ref('mealPhotos').push({
+                                date: photoDate,
+                                src: downloadURL
+                            }).then(() => {
+                                showThankYouModal();
+                                e.target.reset(); // Reset the form
+                                document.getElementById('photoDate').value = new Date().toISOString().split('T')[0]; // Reset date
+                            }).catch(error => {
+                                console.error("Error saving photo metadata to Firebase:", error);
+                                alert("Failed to save photo record. Please try again.");
+                            });
+                        });
+                    }
+                );
+            } else {
+                alert('Please select a photo to upload.');
+            }
+        });
+    </script>
+</body>
+</html>
+
         /* Custom gradient text for headings */
         .text-gradient {
             background-clip: text;
